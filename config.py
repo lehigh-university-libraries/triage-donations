@@ -55,6 +55,7 @@ def _build_remote_configs(remote_section):
 
 _data = _load_yaml()
 _google_sheets = _data.get("google_sheets", {})
+_selector = _data.get("selector", {})
 
 
 class Config:
@@ -68,3 +69,6 @@ class Config:
     )
     GOOGLE_SHEET_ID = _google_sheets.get("sheet_id") or None
     GOOGLE_SHEET_WORKSHEET_NAME = _google_sheets.get("worksheet_name", "Sheet1")
+
+    SELECTOR_BASE_URL = _selector.get("base_url") or None
+    SELECTOR_TIMEOUT_SECONDS = float(_selector.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))

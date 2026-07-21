@@ -40,6 +40,22 @@ remote:
     # per-remote (e.g. to a dc.identifier-style index) if one doesn't.
     isbn_index: bath.isbn
 
+# Selector web service: given a Dewey call number, returns the librarian
+# responsible for that subject area, to route the donated book to them. If
+# this section is commented out (or base_url left blank), get_selector()
+# always falls back to a generic default selector without making any network
+# call. This should point at a service that accepts a "callNumber" query
+# parameter and responds with a JSON array of matching librarians, e.g.:
+#   GET https://selector-lookup.example.edu/search?callNumber=630
+#   [{"username": "...", "firstName": "...", "lastName": "...",
+#     "callNumberPrefixes": ["63", "64"]}, ...]
+# A FOLIO-based implementation of this API is available at
+# https://github.com/lehigh-university-libraries/librarian-call-numbers
+# If more than one librarian is returned, the default selector is used.
+selector:
+  base_url: https://selector-lookup.example.edu/search
+  timeout_seconds: 8
+
 # How many of the most recently scanned books to show in the on-page table.
 # This list is kept entirely in the browser, not the server — the server
 # is stateless (aside from the Sheets append) since one server process may

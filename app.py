@@ -4,6 +4,7 @@ from flask import Flask, jsonify, render_template, request
 from werkzeug.exceptions import HTTPException
 
 import marc_lookup
+import selector
 import sheets
 from config import Config
 from selector import get_selector
@@ -15,6 +16,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 sheets.init(Config)
+selector.init(Config)
 
 
 @app.route("/")

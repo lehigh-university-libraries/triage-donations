@@ -1,5 +1,7 @@
 # Book Donation Triage Scanner
 
+ALPHA -- IN INITIAL DEVELOPMENT
+
 A Flask app for a book-donation triage desk. A librarian scans a book's ISBN
 with a USB barcode scanner; the app checks local holdings first via
 SRU, falls back to a Library of Congress SRU lookup for title/author/Dewey
