@@ -1,0 +1,81 @@
+# Copy this file to config.yaml and adjust values for your environment.
+
+# The local catalog, checked first for existing holdings. Required — there
+# is no default; the app raises an error at startup if sru_base_url is unset.
+local:
+  sru_base_url: http://sru.institution.edu:210/database
+
+  # Timeout, in seconds, for this endpoint's SRU HTTP request before giving
+  # up and falling through to the remote catalogs below.
+  timeout_seconds: 8
+
+  # SRU recordSchema to request for this endpoint — must match what the
+  # server expects. This app only supports SRU endpoints that return
+  # embedded MARCXML in <recordData>; there is no support for raw/binary
+  # MARC. Note "usmarc" here is FOLIO's own alias for that same MARCXML
+  # format (not true binary MARC) — see their docs at
+  # https://github.com/folio-org/Net-Z3950-FOLIO/blob/master/doc/capabilities.md#z3950-retrieval
+  record_schema: usmarc
+
+  # CQL index name used to query by ISBN, e.g. "isbn={value}". This is this
+  # catalog's own local index name — it may not follow the Bath Profile
+  # convention remote catalogs typically use (see "remote" below).
+  isbn_index: isbn
+
+# Bibliographic catalogs to fall back to, in order, when an ISBN isn't held
+# locally. Each is queried in turn until one returns a record with a call
+# number — add or remove entries freely, the app loops over whatever is
+# defined here. If none of them yield a call number, the first one that
+# returned any record at all is used (title/author only, generic selector).
+remote:
+  library_of_congress:
+    sru_base_url: http://lx2.loc.gov:210/lcdb
+    timeout_seconds: 8
+    record_schema: marcxml
+
+    # "bath.isbn" is the Bath Index-Set's CQL index for ISBN lookups (part
+    # of LC's CQL mapping of the Z39.50 Bath Profile) and is confirmed
+    # working against this LOC endpoint — used here as the default for
+    # remote catalogs, but not every SRU server supports it, so override
+    # per-remote (e.g. to a dc.identifier-style index) if one doesn't.
+    isbn_index: bath.isbn
+
+# Selector web service: given a Dewey call number, returns the librarian
+# responsible for that subject area, to route the donated book to them. If
+# this section is commented out (or base_url left blank), get_selector()
+# always falls back to a generic default selector without making any network
+# call. This should point at a service that accepts a "callNumber" query
+# parameter and responds with a JSON array of matching librarians, e.g.:
+#   GET https://selector-lookup.example.edu/search?callNumber=630
+#   [{"username": "...", "firstName": "...", "lastName": "...",
+#     "callNumberPrefixes": ["63", "64"]}, ...]
+# A FOLIO-based implementation of this API is available at
+# https://github.com/lehigh-university-libraries/librarian-call-numbers
+# If more than one librarian is returned, the default selector is used.
+selector:
+  base_url: https://selector-lookup.example.edu/search
+  timeout_seconds: 8
+
+# How many of the most recently scanned books to show in the on-page table.
+# This list is kept entirely in the browser, not the server — the server
+# is stateless (aside from the Sheets append) since one server process may
+# serve multiple kiosk pages at once.
+recent_scans_count: 3
+
+# Google Sheets logging: every scan result is appended as a row here.
+# Comment out this whole section (or leave sheet_id blank) to disable
+# Sheets logging entirely — scans still work, and the app logs a one-time
+# warning instead of repeatedly trying (and failing) on every scan.
+google_sheets:
+  # Path to a Google service-account JSON key file, used to authenticate to
+  # the Google Sheets API. The target Sheet must be shared with this service
+  # account's email (Editor access), and the Sheets API must be enabled on
+  # its GCP project. See README.md for setup steps.
+  service_account_json_path: service_account.json
+
+  # The ID of the target Google Sheet, taken from its URL between /d/ and
+  # /edit.
+  sheet_id: ""
+
+  # Name of the worksheet/tab within the spreadsheet to append scan rows to.
+  worksheet_name: Sheet1
