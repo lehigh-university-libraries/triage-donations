@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book Donation Triage</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="app-header">
+    <h1>Book Donation Triage</h1>
+  </header>
+
+  <main>
+    <section id="scan-section" aria-label="Scan input">
+      <form id="scan-form" autocomplete="off">
+        <label for="isbn-input">Scan ISBN</label>
+        <input
+          type="text"
+          id="isbn-input"
+          name="isbn"
+          inputmode="numeric"
+          autocomplete="off"
+          aria-describedby="scan-status">
+        <button type="submit">Submit</button>
+      </form>
+      <p id="scan-status" class="visually-hidden" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="result-section" aria-labelledby="result-heading">
+      <h2 id="result-heading" class="visually-hidden">Current scan result</h2>
+      <div id="result-live" aria-live="polite" aria-atomic="true">
+        <p id="book-title-author" class="book-meta"></p>
+        <p id="disposition" class="disposition">
+          <span id="disposition-icon" class="disposition-icon" aria-hidden="true"></span>
+          <span id="disposition-text"></span>
+        </p>
+      </div>
+    </section>
+
+    <section id="recent-section" aria-labelledby="recent-heading">
+      <h2 id="recent-heading">Recently Scanned</h2>
+      <table id="recent-scans" data-max-rows="{{ recent_count }}">
+        <caption class="visually-hidden">
+          The most recently scanned books, most recent first
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Author</th>
+            <th scope="col">Disposition</th>
+          </tr>
+        </thead>
+        <tbody id="recent-scans-body"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>
