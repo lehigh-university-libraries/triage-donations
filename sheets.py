@@ -4,7 +4,15 @@ import gspread
 
 logger = logging.getLogger(__name__)
 
-HEADER_ROW = ["Timestamp", "ISBN", "Title", "Authors", "Disposition", "Call Number"]
+HEADER_ROW = [
+    "Timestamp",
+    "Input",
+    "ISBN",
+    "Title",
+    "Authors",
+    "Disposition",
+    "Call Number",
+]
 
 _worksheet = None
 _enabled = False
@@ -28,7 +36,9 @@ def init(config):
         return
 
     try:
-        client = gspread.service_account(filename=config.GOOGLE_SERVICE_ACCOUNT_JSON_PATH)
+        client = gspread.service_account(
+            filename=config.GOOGLE_SERVICE_ACCOUNT_JSON_PATH
+        )
         sheet = client.open_by_key(config.GOOGLE_SHEET_ID)
         worksheet = sheet.worksheet(config.GOOGLE_SHEET_WORKSHEET_NAME)
 
@@ -38,10 +48,12 @@ def init(config):
         _worksheet = worksheet
         _enabled = True
     except Exception:
-        logger.exception("Failed to connect to Google Sheets at startup — Sheets logging is disabled")
+        logger.exception(
+            "Failed to connect to Google Sheets at startup — Sheets logging is disabled"
+        )
 
 
-def append_scan_row(result):
+def append_scan_row(input, result):
     """Appends a row to the configured Google Sheet. Returns an error string on
     failure; never raises, since a Sheets outage must not block the scan
     response. Returns None immediately if Sheets logging is disabled.
@@ -53,6 +65,7 @@ def append_scan_row(result):
         _worksheet.append_row(
             [
                 result["timestamp"],
+                input,
                 result["isbn"],
                 result["title"] or "",
                 "; ".join(result["authors"]) if result["authors"] else "",

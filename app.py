@@ -35,11 +35,16 @@ def scan():
 
     isbn, is_valid = marc_lookup.normalize_and_validate_isbn(raw_isbn)
     if not isbn:
-        return jsonify(ok=False, error="invalid_isbn", message="No ISBN digits found in input"), 400
+        return (
+            jsonify(
+                ok=False, error="invalid_isbn", message="No ISBN digits found in input"
+            ),
+            400,
+        )
 
     result = marc_lookup.lookup_isbn(isbn, is_valid, Config, get_selector)
 
-    sheets_error = sheets.append_scan_row(result)
+    sheets_error = sheets.append_scan_row(raw_isbn, result)
     if sheets_error:
         result["warnings"].append(sheets_error)
 
