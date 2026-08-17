@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import gspread
 
@@ -18,6 +20,7 @@ HEADER_ROW = [
 
 _worksheet = None
 _enabled = False
+_timezone = ZoneInfo("UTC")
 
 
 def init(config):
@@ -28,7 +31,9 @@ def init(config):
     process — append_scan_row then becomes a no-op instead of failing on
     every single scan.
     """
-    global _worksheet, _enabled
+    global _worksheet, _enabled, _timezone
+
+    _timezone = ZoneInfo(config.GOOGLE_SHEET_TIMEZONE)
 
     if not config.GOOGLE_SHEET_ID:
         logger.warning(
@@ -55,6 +60,16 @@ def init(config):
         )
 
 
+def _format_timestamp_for_sheets(iso_timestamp):
+    """Converts an ISO-8601 UTC timestamp (e.g.
+    '2026-08-17T14:32:01.123456+00:00') to the configured display timezone
+    and reformats it as a plain 'YYYY-MM-DD HH:MM:SS' string, since Google
+    Sheets doesn't recognize the 'T' separator or a timezone offset as a
+    date/time value."""
+    local_dt = datetime.fromisoformat(iso_timestamp).astimezone(_timezone)
+    return local_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
 def append_scan_row(input, result):
     """Appends a row to the configured Google Sheet. Returns an error string on
     failure; never raises, since a Sheets outage must not block the scan
@@ -66,7 +81,7 @@ def append_scan_row(input, result):
     try:
         _worksheet.append_row(
             [
-                result["timestamp"],
+                _format_timestamp_for_sheets(result["timestamp"]),
                 input,
                 result["isbn"],
                 result["title"] or "",
