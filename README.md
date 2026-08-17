@@ -55,7 +55,10 @@ lookup automatically.
 
 ## Selector lookup
 
-`selector.py`'s `get_selector(call_number)` is currently a hardcoded stub
-based on the leading Dewey digit. Replace its implementation with a real
-web-service call when one becomes available — the function signature is
-meant to stay stable.
+`selector.py`'s `get_selector(call_number)` looks up the subject-selector
+librarian for a Dewey call number via the web service configured under
+`selector` in `config.yaml` (see `config.yaml.example` for the API contract
+and a link to a reference implementation). If that section is left
+unconfigured, or the service returns anything other than exactly one
+matching librarian, it falls back to a generic default selector.
+
