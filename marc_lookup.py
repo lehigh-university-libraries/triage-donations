@@ -114,7 +114,8 @@ def parse_sru_response(xml_bytes):
 
 
 def extract_bib_info(record):
-    """record: a pymarc.Record. Returns {'title': str|None, 'authors': [str], 'dewey': str|None}."""
+    """record: a pymarc.Record. Returns {'title': str|None, 'authors': [str],
+    'dewey': str|None, 'publication_date': str|None, 'imprint': str|None}."""
     title = None
     f245 = record.get_fields("245")
     if f245:
@@ -143,7 +144,25 @@ def extract_bib_info(record):
         if raw:
             dewey = normalize_dewey(raw[0])
 
-    return {"title": title, "authors": authors, "dewey": dewey}
+    publication_date = None
+    imprint = None
+    pub_fields = record.get_fields("260") or record.get_fields("264")
+    if pub_fields:
+        pub_field = pub_fields[0]
+        c_subs = pub_field.get_subfields("c")
+        if c_subs:
+            publication_date = c_subs[0].strip().rstrip(",.") or None
+        b_subs = pub_field.get_subfields("b")
+        if b_subs:
+            imprint = b_subs[0].strip().rstrip(",.") or None
+
+    return {
+        "title": title,
+        "authors": authors,
+        "dewey": dewey,
+        "publication_date": publication_date,
+        "imprint": imprint,
+    }
 
 
 def normalize_dewey(raw):
@@ -159,7 +178,7 @@ def lookup_isbn(isbn, is_structurally_valid, config, selector_lookup):
     warnings = []
 
     if not isbn:
-        return _build_result(isbn, is_structurally_valid, None, [], "not_found",
+        return _build_result(isbn, is_structurally_valid, None, "not_found",
                               "Invalid ISBN", None, None, warnings)
 
     local_records, local_err = query_endpoint(isbn, config.LOCAL, 1)
@@ -175,7 +194,7 @@ def lookup_isbn(isbn, is_structurally_valid, config, selector_lookup):
             info = None
 
         if info is not None:
-            return _build_result(isbn, is_structurally_valid, info["title"], info["authors"],
+            return _build_result(isbn, is_structurally_valid, info,
                                   "local", "Already in collection", None, None, warnings)
 
     fallback_info = None
@@ -199,7 +218,7 @@ def lookup_isbn(isbn, is_structurally_valid, config, selector_lookup):
         if info["dewey"]:
             selector_name = selector_lookup(info["dewey"])
             disposition = f"Dewey {info['dewey']} — see {selector_name}"
-            return _build_result(isbn, is_structurally_valid, info["title"], info["authors"],
+            return _build_result(isbn, is_structurally_valid, info,
                                   name, disposition, info["dewey"], selector_name, warnings)
 
         if fallback_info is None:
@@ -209,25 +228,29 @@ def lookup_isbn(isbn, is_structurally_valid, config, selector_lookup):
     if fallback_info is not None:
         selector_name = selector_lookup("")
         disposition = f"Found at {fallback_source}, no Dewey number — see {selector_name}"
-        return _build_result(isbn, is_structurally_valid, fallback_info["title"], fallback_info["authors"],
+        return _build_result(isbn, is_structurally_valid, fallback_info,
                               fallback_source, disposition, None, selector_name, warnings)
 
-    return _build_result(isbn, is_structurally_valid, None, [], "not_found",
+    return _build_result(isbn, is_structurally_valid, None, "not_found",
                           "Not found", None, None, warnings)
 
 
-def _build_result(isbn, isbn_valid, title, authors, source, disposition, call_number, selector, warnings):
-    """Assembles the scan result dict returned by lookup_isbn."""
+def _build_result(isbn, isbn_valid, info, source, disposition, call_number, selector, warnings):
+    """Assembles the scan result dict returned by lookup_isbn. info is the dict
+    returned by extract_bib_info, or None when no record was found."""
     from datetime import datetime, timezone
 
+    info = info or {}
     return {
         "isbn": isbn,
         "isbn_valid": isbn_valid,
-        "title": title,
-        "authors": authors,
+        "title": info.get("title"),
+        "authors": info.get("authors") or [],
         "source": source,
         "disposition": disposition,
         "call_number": call_number,
+        "publication_date": info.get("publication_date"),
+        "imprint": info.get("imprint"),
         "selector": selector,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "warnings": warnings,

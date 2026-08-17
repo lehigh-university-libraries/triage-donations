@@ -12,6 +12,8 @@ HEADER_ROW = [
     "Authors",
     "Disposition",
     "Call Number",
+    "Publication Date",
+    "Imprint",
 ]
 
 _worksheet = None
@@ -71,6 +73,8 @@ def append_scan_row(input, result):
                 "; ".join(result["authors"]) if result["authors"] else "",
                 result["disposition"],
                 result["call_number"] or "",
+                result["publication_date"] or "",
+                result["imprint"] or "",
             ],
             value_input_option="USER_ENTERED",
         )
