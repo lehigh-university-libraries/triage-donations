@@ -62,3 +62,18 @@ and a link to a reference implementation). If that section is left
 unconfigured, or the service returns anything other than exactly one
 matching librarian, it falls back to a generic default selector.
 
+## Docker deployment
+
+Build and run with Docker:
+
+```sh
+docker build -t triage-donations .
+docker run -v ./:/app -p 5000:5000 --rm --name triage-donations triage-donations
+```
+
+The container runs `gunicorn` (config in `gunicorn.conf.py`) against `app:app`
+on port 5000. `config.yaml` and `service_account.json` aren't baked into the
+image (see `.dockerignore`) — mount them in via the volume above, or bake
+your own image on top with `COPY` if you'd rather not mount at runtime.
+Set the `WORKERS` environment variable to change the gunicorn worker count
+(default 4).

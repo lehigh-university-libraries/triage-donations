@@ -5,3 +5,4 @@ gspread>=6.1,<7.0
 google-auth>=2.29,<3.0
 PyYAML>=6.0,<7.0
 tzdata>=2024.1
+gunicorn>=23.0.0
