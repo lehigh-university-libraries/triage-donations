@@ -72,4 +72,6 @@ class Config:
     GOOGLE_SHEET_TIMEZONE = _google_sheets.get("timezone", "UTC")
 
     SELECTOR_BASE_URL = _selector.get("base_url") or None
-    SELECTOR_TIMEOUT_SECONDS = float(_selector.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
+    SELECTOR_TIMEOUT_SECONDS = float(
+        _selector.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)
+    )
