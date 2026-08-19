@@ -1,13 +1,26 @@
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import gspread
 
 logger = logging.getLogger(__name__)
 
-HEADER_ROW = ["Timestamp", "ISBN", "Title", "Authors", "Disposition", "Call Number"]
+HEADER_ROW = [
+    "Timestamp",
+    "Input",
+    "ISBN",
+    "Title",
+    "Authors",
+    "Disposition",
+    "Call Number",
+    "Publication Date",
+    "Imprint",
+]
 
 _worksheet = None
 _enabled = False
+_timezone = ZoneInfo("UTC")
 
 
 def init(config):
@@ -18,7 +31,9 @@ def init(config):
     process — append_scan_row then becomes a no-op instead of failing on
     every single scan.
     """
-    global _worksheet, _enabled
+    global _worksheet, _enabled, _timezone
+
+    _timezone = ZoneInfo(config.GOOGLE_SHEET_TIMEZONE)
 
     if not config.GOOGLE_SHEET_ID:
         logger.warning(
@@ -28,7 +43,9 @@ def init(config):
         return
 
     try:
-        client = gspread.service_account(filename=config.GOOGLE_SERVICE_ACCOUNT_JSON_PATH)
+        client = gspread.service_account(
+            filename=config.GOOGLE_SERVICE_ACCOUNT_JSON_PATH
+        )
         sheet = client.open_by_key(config.GOOGLE_SHEET_ID)
         worksheet = sheet.worksheet(config.GOOGLE_SHEET_WORKSHEET_NAME)
 
@@ -38,10 +55,22 @@ def init(config):
         _worksheet = worksheet
         _enabled = True
     except Exception:
-        logger.exception("Failed to connect to Google Sheets at startup — Sheets logging is disabled")
+        logger.exception(
+            "Failed to connect to Google Sheets at startup — Sheets logging is disabled"
+        )
 
 
-def append_scan_row(result):
+def _format_timestamp_for_sheets(iso_timestamp):
+    """Converts an ISO-8601 UTC timestamp (e.g.
+    '2026-08-17T14:32:01.123456+00:00') to the configured display timezone
+    and reformats it as a plain 'YYYY-MM-DD HH:MM:SS' string, since Google
+    Sheets doesn't recognize the 'T' separator or a timezone offset as a
+    date/time value."""
+    local_dt = datetime.fromisoformat(iso_timestamp).astimezone(_timezone)
+    return local_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def append_scan_row(input, result):
     """Appends a row to the configured Google Sheet. Returns an error string on
     failure; never raises, since a Sheets outage must not block the scan
     response. Returns None immediately if Sheets logging is disabled.
@@ -52,12 +81,15 @@ def append_scan_row(result):
     try:
         _worksheet.append_row(
             [
-                result["timestamp"],
+                _format_timestamp_for_sheets(result["timestamp"]),
+                input,
                 result["isbn"],
                 result["title"] or "",
                 "; ".join(result["authors"]) if result["authors"] else "",
                 result["disposition"],
                 result["call_number"] or "",
+                result["publication_date"] or "",
+                result["imprint"] or "",
             ],
             value_input_option="USER_ENTERED",
         )

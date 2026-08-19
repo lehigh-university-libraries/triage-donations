@@ -49,6 +49,12 @@
     dispositionEl.dataset.kind = dispositionKind;
   }
 
+  function clearResult() {
+    titleAuthorEl.textContent = '';
+    dispositionTextEl.textContent = '';
+    delete dispositionEl.dataset.kind;
+  }
+
   function renderRecent() {
     recentScansTbody.innerHTML = '';
     recentScans.forEach((row) => {
@@ -95,6 +101,7 @@
     if (inFlight) return;
     inFlight = true;
 
+    clearResult();
     setPending(true);
     setStatus('Looking up scanned item…');
 

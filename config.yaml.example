@@ -79,3 +79,10 @@ google_sheets:
 
   # Name of the worksheet/tab within the spreadsheet to append scan rows to.
   worksheet_name: Sheet1
+
+  # IANA timezone name (e.g. "America/New_York") that scan timestamps are
+  # converted to before being written to the Sheet — timestamps are recorded
+  # internally in UTC, and Sheets has no concept of timezone on its own, so
+  # this controls what wall-clock time actually shows up in the spreadsheet.
+  # Defaults to UTC.
+  timezone: UTC

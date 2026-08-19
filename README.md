@@ -55,7 +55,25 @@ lookup automatically.
 
 ## Selector lookup
 
-`selector.py`'s `get_selector(call_number)` is currently a hardcoded stub
-based on the leading Dewey digit. Replace its implementation with a real
-web-service call when one becomes available — the function signature is
-meant to stay stable.
+`selector.py`'s `get_selector(call_number)` looks up the subject-selector
+librarian for a Dewey call number via the web service configured under
+`selector` in `config.yaml` (see `config.yaml.example` for the API contract
+and a link to a reference implementation). If that section is left
+unconfigured, or the service returns anything other than exactly one
+matching librarian, it falls back to a generic default selector.
+
+## Docker deployment
+
+Build and run with Docker:
+
+```sh
+docker build -t triage-donations .
+docker run -v ./:/app -p 5000:5000 --rm --name triage-donations triage-donations
+```
+
+The container runs `gunicorn` (config in `gunicorn.conf.py`) against `app:app`
+on port 5000. `config.yaml` and `service_account.json` aren't baked into the
+image (see `.dockerignore`) — mount them in via the volume above, or bake
+your own image on top with `COPY` if you'd rather not mount at runtime.
+Set the `WORKERS` environment variable to change the gunicorn worker count
+(default 4).

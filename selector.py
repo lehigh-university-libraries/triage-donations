@@ -46,7 +46,9 @@ def get_selector(call_number):
         resp.raise_for_status()
         librarians = resp.json()
     except (requests.exceptions.RequestException, ValueError) as exc:
-        logger.warning("Selector lookup failed for call number %r: %s", call_number, exc)
+        logger.warning(
+            "Selector lookup failed for call number %r: %s", call_number, exc
+        )
         return DEFAULT_SELECTOR
 
     if not isinstance(librarians, list) or len(librarians) != 1:

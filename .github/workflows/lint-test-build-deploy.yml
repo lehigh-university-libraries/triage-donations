@@ -1,0 +1,48 @@
+name: lint-build-push-deploy
+on:
+  push:
+    tags:
+      - "*"
+    branches:
+      - "**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6 # v3.4.0
+        with:
+          verbose: true
+
+      - uses: psf/black@87928e6d6761a4a6d22250e1fee5601b3998086e # stable
+        with:
+          options: "--check --verbose"
+
+  build-push:
+    needs: [lint]
+    uses: lehigh-university-libraries/gha/.github/workflows/build-push-ghcr.yaml@e26d86abfbe300be4d93570b666651c11471995b # main
+    permissions:
+      contents: read
+      packages: write
+    secrets: inherit
+
+  deploy:
+    needs: [build-push]
+    uses: lehigh-university-libraries/gha/.github/workflows/linderman-deploy.yaml@e26d86abfbe300be4d93570b666651c11471995b # main
+    with:
+      url: https://apps-test.lib.lehigh.edu/_rollout
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
