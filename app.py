@@ -19,6 +19,12 @@ sheets.init(Config)
 selector.init(Config)
 
 
+@app.route("/healthcheck")
+def healthcheck():
+    """Liveness endpoint for the container's HEALTHCHECK."""
+    return "OK"
+
+
 @app.route("/")
 def index():
     """Renders the kiosk page, passing along the browser-side recent-scans row cap."""
