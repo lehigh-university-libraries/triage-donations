@@ -51,6 +51,7 @@ def init(config):
 
         if not worksheet.acell("A1").value:
             worksheet.append_row(HEADER_ROW, value_input_option="USER_ENTERED")
+            worksheet.freeze(rows=1)
 
         _worksheet = worksheet
         _enabled = True
