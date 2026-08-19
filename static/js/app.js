@@ -9,6 +9,7 @@
   const recentScansTbody = document.getElementById('recent-scans-body');
 
   const maxRecentRows = parseInt(recentScansTable.dataset.maxRows, 10) || 3;
+  const scanUrl = form.dataset.scanUrl;
 
   let recentScans = [];
 
@@ -106,7 +107,7 @@
     setStatus('Looking up scanned item…');
 
     try {
-      const resp = await fetch('/api/scan', {
+      const resp = await fetch(scanUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isbn }),

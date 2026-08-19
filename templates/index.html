@@ -13,7 +13,7 @@
 
   <main>
     <section id="scan-section" aria-label="Scan input">
-      <form id="scan-form" autocomplete="off">
+      <form id="scan-form" autocomplete="off" data-scan-url="{{ url_for('scan') }}">
         <label for="isbn-input">Scan ISBN</label>
         <input
           type="text"
